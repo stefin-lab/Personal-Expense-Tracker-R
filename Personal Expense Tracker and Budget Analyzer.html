@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Personal Expense Tracker and Budget Analyzer</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f6fa;--card:#fff;--ink:#1d2433;--mut:#6a7389;--line:#e4e8f1;--acc:#2f6f4f;--ok:#1b8a4b;--okb:#e3f6ea;--warn:#b7791f;--warnb:#fdf1d8;--bad:#c0392b;--badb:#fbe3e0;--track:#e9edf5}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1520;--card:#18212f;--ink:#e8edf6;--mut:#9aa6bd;--line:#2a3548;--acc:#6fd0a0;--ok:#5fd08f;--okb:#12372a;--warn:#f0b954;--warnb:#3b2f12;--bad:#ff8b7e;--badb:#3d1b19;--track:#263247}}
+:root[data-theme="dark"]{--bg:#0f1520;--card:#18212f;--ink:#e8edf6;--mut:#9aa6bd;--line:#2a3548;--acc:#6fd0a0;--ok:#5fd08f;--okb:#12372a;--warn:#f0b954;--warnb:#3b2f12;--bad:#ff8b7e;--badb:#3d1b19;--track:#263247}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Segoe UI,Arial,sans-serif}
+header{background:linear-gradient(120deg,#2f6f4f,#3a9a6b);color:#fff;padding:24px 16px}
+.w{max-width:1100px;margin:0 auto;padding:0 16px}header .w{padding:0}
+h1{margin:0 0 6px;font-size:26px}header p{margin:0;opacity:.92;font-size:14px}
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0}
+.tag{background:var(--okb);color:var(--ok);border-radius:8px;padding:6px 10px;font-size:13px}
+.btn{background:var(--acc);color:#fff;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer}
+@media(prefers-color-scheme:dark){.btn{color:#0f1520}}
+input[type=file]{display:none}.err{color:var(--bad);font-size:13px}
+.bar label.l{font-size:13px;color:var(--mut)}.bar input[type=number]{width:110px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
+.k{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.k .c{margin:0}.k span{display:block;color:var(--mut);font-size:12px;text-transform:uppercase;font-weight:700}
+.k strong{display:block;font-size:24px;margin-top:6px;color:var(--acc)}
+h2{font-size:16px;margin:0 0 12px;color:var(--acc)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.big{font-size:22px;font-weight:700}.mut{color:var(--mut);font-size:13px}
+.pb{height:14px;background:var(--track);border-radius:7px;overflow:hidden;margin:12px 0 6px}.pb i{display:block;height:100%;border-radius:7px}
+.pill{display:inline-block;border-radius:999px;padding:3px 12px;font-weight:700;font-size:13px}
+.ok{background:var(--okb);color:var(--ok)}.warn{background:var(--warnb);color:var(--warn)}.bad{background:var(--badb);color:var(--bad)}
+.cr{margin:12px 0}.cr .t{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.sc{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-size:12px;text-transform:uppercase}td.n,th.n{text-align:right}tr.top td{font-weight:700}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+@media(max-width:760px){.k{grid-template-columns:repeat(2,1fr)}.g{grid-template-columns:1fr}}
+</style></head><body>
+<header><div class="w"><h1>💰 Personal Expense Tracker and Budget Analyzer</h1><p>Spending summary, category analysis and budget status</p></div></header>
+<main class="w">
+<div class="bar"><span class="tag" id="tag">Built-in sample data from app.R</span>
+<label class="l" for="bud">Monthly budget (Rs.)</label><input id="bud" type="number" min="0" value="5000">
+<label class="btn" for="f">Upload expenses.csv</label><input id="f" type="file" accept=".csv"><span class="err" id="err"></span></div>
+<div class="k" id="k"></div>
+<div class="g"><div class="c"><h2>Budget Status</h2><div id="bs"></div></div><div class="c"><h2>Largest Expense</h2><div id="lg"></div></div></div>
+<div class="c"><h2>Category Analysis</h2><div id="cats"></div></div>
+<div class="c"><h2>Transaction Records</h2><div class="sc"><table id="t"></table></div></div>
+</main>
+<script>
+var sample=[["2026-10-01","Groceries","Food",850],["2026-10-02","Bus Pass","Transport",600],["2026-10-03","Lunch","Food",180],["2026-10-04","Mobile Recharge","Bills",299],["2026-10-05","Notebook","Education",120],["2026-10-06","Movie","Entertainment",250],["2026-10-07","Electricity Bill","Bills",950],["2026-10-08","Snacks","Food",100]];
+var rows=sample,pal=["#2f6f4f","#3b82c4","#e0a030","#a05cc0","#d1604d","#4aa3a3","#8a8f3c"];
+function fm(x){var r=x*100,f=Math.floor(r),d=r-f,n=d>0.5+1e-9?f+1:d<0.5-1e-9?f:(f%2?f+1:f);return(n/100).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
+function draw(){
+ var bud=Number(document.getElementById("bud").value);if(isNaN(bud)||bud<0)bud=5000;
+ var tot=rows.reduce(function(a,r){return a+r[3]},0),avg=tot/rows.length,rem=bud-tot,top=rows[0];
+ rows.forEach(function(r){if(r[3]>top[3])top=r});
+ var st=tot>bud?["OVER BUDGET","bad","var(--bad)"]:tot==bud?["BUDGET FULLY USED","warn","var(--warn)"]:["WITHIN BUDGET","ok","var(--ok)"];
+ document.getElementById("k").innerHTML=[["Monthly budget","Rs. "+fm(bud)],["Total expenses","Rs. "+fm(tot)],["Remaining budget","Rs. "+fm(rem)],["Average transaction","Rs. "+fm(avg)]].map(function(x){return"<div class='c'><span>"+x[0]+"</span><strong>"+x[1]+"</strong></div>"}).join("");
+ var pct=bud>0?Math.min(tot/bud*100,100):100;
+ document.getElementById("bs").innerHTML="<span class='pill "+st[1]+"'>"+st[0]+"</span><div class='pb'><i style='width:"+pct+"%;background:"+st[2]+"'></i></div><div class='mut'>Rs. "+fm(tot)+" of Rs. "+fm(bud)+" used · "+rows.length+" transactions</div>";
+ document.getElementById("lg").innerHTML="<div class='big'>"+esc(top[1])+"</div><div class='mut'>Rs. "+fm(top[3])+" · "+esc(top[2])+" · "+esc(top[0])+"</div>";
+ var m={};rows.forEach(function(r){m[r[2]]=(m[r[2]]||0)+r[3]});
+ var cs=Object.keys(m).map(function(k){return[k,m[k]]}).sort(function(a,b){return b[1]-a[1]});
+ document.getElementById("cats").innerHTML=cs.map(function(c,i){var p=Math.round(c[1]/tot*10000)/100;return"<div class='cr'><div class='t'><span><i class='dot' style='background:"+pal[i%pal.length]+"'></i>"+esc(c[0])+"</span><b>Rs. "+fm(c[1])+" · "+p.toFixed(2)+"%</b></div><div class='pb' style='margin:0'><i style='width:"+p+"%;background:"+pal[i%pal.length]+"'></i></div></div>"}).join("");
+ document.getElementById("t").innerHTML="<thead><tr><th>Date</th><th>Description</th><th>Category</th><th class='n'>Amount</th></tr></thead><tbody>"+rows.map(function(r){return"<tr"+(r===top?" class='top'":"")+"><td>"+esc(r[0])+"</td><td>"+esc(r[1])+"</td><td>"+esc(r[2])+"</td><td class='n'>"+fm(r[3])+"</td></tr>"}).join("")+"</tbody>";
+}
+function parse(txt){
+ var ln=txt.replace(/\r/g,"").split("\n").filter(function(l){return l.trim()}),sp=function(l){return l.split(",").map(function(x){return x.trim().replace(/^"|"$/g,"")})},h=sp(ln[0]),need=["Date","Description","Category","Amount"],ix=need.map(function(k){return h.indexOf(k)});
+ if(ix.indexOf(-1)>-1)throw new Error("Missing required CSV column(s): "+need.filter(function(k,i){return ix[i]<0}).join(", "));
+ var out=ln.slice(1).map(function(l){var p=sp(l);return[p[ix[0]],p[ix[1]],p[ix[2]],Number(p[ix[3]])]});
+ if(!out.length)throw new Error("The expense CSV contains no records.");
+ if(out.some(function(r){return isNaN(r[3])||r[3]<0}))throw new Error("Every Amount must be a valid non-negative number.");
+ return out}
+document.getElementById("bud").addEventListener("input",draw);
+document.getElementById("f").addEventListener("change",function(e){
+ var f=e.target.files[0],er=document.getElementById("err");er.textContent="";if(!f)return;
+ var rd=new FileReader();rd.onload=function(){try{rows=parse(rd.result);document.getElementById("tag").textContent="Showing: "+f.name;draw()}catch(x){er.textContent=x.message}};rd.readAsText(f)});
+draw();
+</script></body></html>
